@@ -1,0 +1,4 @@
+web3==7.6.0
+py-solc-x
+colorama
+retry
