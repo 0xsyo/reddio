@@ -298,10 +298,10 @@ def deploy_contract(account):
 
         tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
         tx_hash_link = f"https://reddio-devnet.l2scan.co/tx/{web3.to_hex(tx_hash)}"
-        print(f"Deploy Token {token_name} sent. Hash: {tx_hash_link}")
+        print(f"Deployment transaction for {token_name} sent. Hash: {tx_hash_link}")
 
         receipt = retry(lambda: web3.eth.wait_for_transaction_receipt(tx_hash, timeout=120), max_retries=5, wait_time=2)
-        print(f"{token_name} Contract Address: {receipt.contractAddress}")
+        print(f"{token_name} contract deployed at: {receipt.contractAddress}")
     except Exception as e:
         print(f"Failed to deploy contract: {str(e)}")
 
@@ -332,10 +332,10 @@ if __name__ == "__main__":
             bridge_eth(account, bridge_amount)
 
             if deploy_contract_flag:
-                print(f"Deploying contract from {wallet_link}")
+                print(f"Deploying contract for {wallet_link}")
                 deploy_contract(account)
 
             print(f"================================================================================\n")
 
-        delay_seconds = random_between(86400, 86777)
+        delay_seconds = random_between(86400, 86777)  # 24 hours to 24.1 hours
         countdown_timer(int(delay_seconds))
