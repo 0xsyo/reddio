@@ -1,6 +1,6 @@
 import time
 import random
-from datetime import timedelta 
+from datetime import timedelta
 from core.config import BRIDGE_CONTRACT_ABI, BRIDGE_CONTRACT_ADDRESS, REDDIO_RPC_URL, REDDIO_COIN_NAME, SEPOLIA_CHAIN_ID, SEPOLIA_RPC_URL
 from core.utils import connect_to_web3, get_account, random_between, retry
 from solcx import install_solc, set_solc_version, compile_source
@@ -108,7 +108,8 @@ def send_eth(account, amount):
     signed_tx = web3.eth.account.sign_transaction(tx, private_key)
     tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
 
-    print(web3.to_hex(tx_hash))
+    tx_hash_link = f"https://reddio-devnet.l2scan.co/tx/{web3.to_hex(tx_hash)}"
+    print(f"Transaction hash: {tx_hash_link}")
 
     time.sleep(3)
 
@@ -118,8 +119,6 @@ def send_eth(account, amount):
     print(f"Transaction hash: {receipt.transactionHash.hex()} ({txStatus})")
 
 def bridge_eth(account, amount_eth):
-    print(f"Bridge {amount_eth} ETH from Sepolia to Reddio ({account.address})")
-
     web3 = connect_to_web3(SEPOLIA_RPC_URL)
 
     balance_wei = web3.eth.get_balance(account.address)
@@ -151,6 +150,9 @@ def bridge_eth(account, amount_eth):
     signed_tx = web3.eth.account.sign_transaction(tx, private_key)
     tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
 
+    tx_hash_link = f"https://sepolia.etherscan.io/tx/{web3.to_hex(tx_hash)}"
+    print(f"Transaction hash: {tx_hash_link}")
+
     receipt = retry(lambda: web3.eth.wait_for_transaction_receipt(tx_hash, timeout=120), max_retries=5, wait_time=2)
 
     txStatus = "Success" if receipt.status == 1 else "Failed"
@@ -158,29 +160,23 @@ def bridge_eth(account, amount_eth):
 
 # Fungsi untuk menghasilkan nama token acak dengan menggabungkan kata sifat dan kata benda
 def generate_creative_token():
-    # Daftar kata sifat (adjectives)
     adjectives = [
         "Quantum", "Stellar", "Lunar", "Solar", "Crypto", "Nebula", "Galaxy", "Ether", "Cosmic", "Radiant", 
         "Celestial", "Ethereal", "Digital", "Futuristic", "Ancient", "Nova", "Atomic", "Eclipse", "Infinite", "Vortex"
     ]
     
-    # Daftar kata benda (nouns)
     nouns = [
         "Chain", "Element", "Coin", "Token", "Crystal", "Verse", "Galaxy", "Universe", "Sphere", "Orbit", 
         "Network", "Link", "Foundation", "Block", "Core", "Matrix", "Circuit", "Realm", "Force", "Core", "System"
     ]
     
-    # Pilih kata sifat dan kata benda acak dan gabungkan untuk membuat nama token
     adjective = random.choice(adjectives)
     noun = random.choice(nouns)
     
-    # Gabungkan keduanya untuk menghasilkan nama token yang unik
     name = f"{adjective} {noun}"
     
-    # Ganti spasi dengan garis bawah agar nama kontrak valid di Solidity
     contract_name = name.replace(" ", "_")
 
-    # Generate simbol acak berdasarkan nama token
     symbol = generate_symbol(name)
     
     return contract_name, name, symbol
@@ -188,12 +184,10 @@ def generate_creative_token():
 # Fungsi untuk menghasilkan simbol token berdasarkan nama token
 def generate_symbol(name):
     words = name.split()
-    # Ambil huruf pertama dari setiap kata dan buat simbolnya lebih dinamis
     symbol = ''.join([word[0] for word in words]).upper()
     
-    # Tambahkan beberapa huruf acak dari kata-kata token
     for word in words:
-        symbol += random.choice(word[1:3]).upper()  # Ambil beberapa huruf dari kata token   
+        symbol += random.choice(word[1:3]).upper()   
     
     return symbol
 
@@ -205,13 +199,10 @@ def generate_initial_supply():
 def deploy_contract(account):
     web3 = connect_to_web3(REDDIO_RPC_URL)
     try:
-        # Generate nama dan simbol token acak
         contract_name, token_name, symbol = generate_creative_token()
 
-        # Generate initial supply acak antara 1 juta sampai 1 miliar
         initial_supply = generate_initial_supply()
 
-        # Kontrak ERC-20 yang sudah dimodifikasi
         updated_contract_code = f'''
         pragma solidity ^0.8.0;
 
@@ -236,8 +227,8 @@ def deploy_contract(account):
             mapping(address => mapping(address => uint256)) private _allowances;
 
             constructor(uint256 initialSupply) {{
-                _totalSupply = initialSupply * (10 ** uint256(decimals)); // supply adjusted by decimals
-                _balances[msg.sender] = _totalSupply; // Assign the total supply to the contract creator
+                _totalSupply = initialSupply * (10 ** uint256(decimals)); 
+                _balances[msg.sender] = _totalSupply;
                 emit Transfer(address(0), msg.sender, _totalSupply);
             }}
 
@@ -286,45 +277,41 @@ def deploy_contract(account):
         }}
         '''
 
-        # Compile the updated contract source code
         compiled_sol = compile_source(updated_contract_code)
         contract_interface = compiled_sol[f'<stdin>:{contract_name}']
         abi = contract_interface['abi']
         bytecode = contract_interface['bin']
 
-        # Prepare the contract instance
         TokenContract = web3.eth.contract(abi=abi, bytecode=bytecode)
 
-        # Get gas estimate
         gas_estimate = TokenContract.constructor(initial_supply).estimate_gas({'from': account.address})
         print(f"Gas estimate for {token_name} ({symbol}) deployment: {gas_estimate}")
 
-        # Build the transaction
         transaction = TokenContract.constructor(initial_supply).build_transaction({
             'from': account.address,
             'nonce': web3.eth.get_transaction_count(account.address),
-            'gas': gas_estimate + 10000,  # Adding a buffer to the gas estimate
+            'gas': gas_estimate + 10000,
             'gasPrice': web3.eth.gas_price,
         })
 
-        # Sign the transaction
         signed_tx = web3.eth.account.sign_transaction(transaction, account.key)
 
-        # Send the transaction
         tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
-        print(f"Deployment transaction for {token_name} sent. Hash: {web3.to_hex(tx_hash)}")
+        tx_hash_link = f"https://reddio-devnet.l2scan.co/tx/{web3.to_hex(tx_hash)}"
+        print(f"Deploy Token {token_name} sent. Hash: {tx_hash_link}")
 
-        # Wait for the receipt
         receipt = retry(lambda: web3.eth.wait_for_transaction_receipt(tx_hash, timeout=120), max_retries=5, wait_time=2)
-        print(f"{token_name} contract deployed at: {receipt.contractAddress}")
+        print(f"{token_name} Contract Address: {receipt.contractAddress}")
     except Exception as e:
         print(f"Failed to deploy contract: {str(e)}")
 
 if __name__ == "__main__":
-    # Pastikan untuk menampilkan ASCII art terlebih dahulu
     print_red_white_ascii_art()
 
-    # Lanjutkan dengan eksekusi kode lainnya
+    # Menanyakan pengguna apakah ingin menjalankan deploy_contract
+    deploy_choice = input("Apakah Anda ingin menjalankan deploy token? (y/n): ").strip().lower()
+    deploy_contract_flag = deploy_choice == 'y'
+
     web3 = connect_to_web3(REDDIO_RPC_URL)
 
     with open('data/private_keys.txt') as f:
@@ -336,18 +323,19 @@ if __name__ == "__main__":
         for i, private_key in enumerate(private_keys):
             print(f"================================================================================\n")
             account = get_account(web3, private_key)
-            send_amount = random_between(0.0001, 0.001)
-            print(f"Sending {send_amount} RED to {account.address}")
+            send_amount = random_between(0.0001, 0.007)
+            wallet_link = f"https://reddio-devnet.l2scan.co/address/{account.address}"
+            print(f"Sending {send_amount} RED to {wallet_link}")
             send_eth(account, send_amount)
             bridge_amount = random_between(0.0001, 0.0009)
+            print(f"Bridging {bridge_amount} ETH from Sepolia to Reddio ({wallet_link})")
             bridge_eth(account, bridge_amount)
 
-            # Deploy contract
-            print(f"Deploying contract for {account.address}")
-            deploy_contract(account)
+            if deploy_contract_flag:
+                print(f"Deploying contract from {wallet_link}")
+                deploy_contract(account)
 
             print(f"================================================================================\n")
 
-        # Generate random delay between 24 to 24,1 hours
-        delay_seconds = random_between(86400, 86777)  # 24 hour (86400) to 24,1 hours (86777s)
+        delay_seconds = random_between(86400, 86777)
         countdown_timer(int(delay_seconds))
