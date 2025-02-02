@@ -308,7 +308,6 @@ def deploy_contract(account):
 if __name__ == "__main__":
     print_red_white_ascii_art()
 
-    # Menanyakan pengguna apakah ingin menjalankan deploy_contract
     deploy_choice = input("Apakah Anda ingin menjalankan deploy token? (y/n): ").strip().lower()
     deploy_contract_flag = deploy_choice == 'y'
 
@@ -323,7 +322,7 @@ if __name__ == "__main__":
         for i, private_key in enumerate(private_keys):
             print(f"================================================================================\n")
             account = get_account(web3, private_key)
-            send_amount = random_between(0.0001, 0.007)
+            send_amount = random_between(0.0001, 0.001)
             wallet_link = f"https://reddio-devnet.l2scan.co/address/{account.address}"
             print(f"Sending {send_amount} RED to {wallet_link}")
             send_eth(account, send_amount)
@@ -337,5 +336,5 @@ if __name__ == "__main__":
 
             print(f"================================================================================\n")
 
-        delay_seconds = random_between(86400, 86777)  # 24 hours to 24.1 hours
+        delay_seconds = random_between(86400, 86777)
         countdown_timer(int(delay_seconds))
