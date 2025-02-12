@@ -1,7 +1,9 @@
 import time
 import random
+import os
 from datetime import timedelta
-from core.config import BRIDGE_CONTRACT_ABI, BRIDGE_CONTRACT_ADDRESS, REDDIO_RPC_URL, REDDIO_COIN_NAME, SEPOLIA_CHAIN_ID, SEPOLIA_RPC_URL
+from core.config import (BRIDGE_CONTRACT_ABI, BRIDGE_CONTRACT_ADDRESS, REDDIO_RPC_URL, 
+                         REDDIO_COIN_NAME, SEPOLIA_CHAIN_ID, SEPOLIA_RPC_URL)
 from core.utils import connect_to_web3, get_account, random_between, retry
 from solcx import install_solc, set_solc_version, compile_source
 from colorama import Fore, Style, init
@@ -13,51 +15,26 @@ set_solc_version('0.8.0')
 # Initialize colorama for terminal color support
 init(autoreset=True)
 
-# ASCII art with red and white colors
-ASCII_ART = r"""
-
- ░▒▓███████▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░░▒▓████████▓▒░░▒▓██████▓▒░  
-░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ 
-░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░    ░▒▓██▓▒░░▒▓█▓▒░░▒▓█▓▒░ 
- ░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓████████▓▒░  ░▒▓██▓▒░  ░▒▓████████▓▒░ 
-       ░▒▓█▓▒░  ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░░▒▓██▓▒░    ░▒▓█▓▒░░▒▓█▓▒░ 
-       ░▒▓█▓▒░  ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░ 
-░▒▓███████▓▒░   ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░ 
-                                                                   
-                                                                   
-"""
-
-# Red and White colors
-RED = Fore.RED
-WHITE = Fore.WHITE
-
-def print_red_white_ascii_art():
-    """Prints ASCII art with the top half in red and bottom half in white."""
-    # Split ASCII art into lines
-    ascii_lines = ASCII_ART.split('\n')
+def rainbow_banner():
+    os.system("clear" if os.name == "posix" else "cls")
+    colors = [Fore.RED, Fore.YELLOW, Fore.GREEN, Fore.CYAN, Fore.BLUE, Fore.MAGENTA]
+    banner = """
+  _______                          
+ |     __|.--.--.---.-.-----.---.-.
+ |__     ||  |  |  _  |-- __|  _  |
+ |_______||___  |___._|_____|___._|
+          |_____|                   
+    """
     
-    # Calculate the middle of the ASCII art (to split it into red and white parts)
-    mid_point = len(ascii_lines) // 2
-    
-    # Print the upper half in red
-    for i in range(mid_point):
-        print(RED + ascii_lines[i] + Style.RESET_ALL)
-    
-    # Print the lower half in white
-    for i in range(mid_point, len(ascii_lines)):
-        print(WHITE + ascii_lines[i] + Style.RESET_ALL)
-    
-    # Add the 'Reddio Onchain' text at the bottom right in white
-    text_to_add = "Reddio Onchain"
-    
-    # Find the length of the longest line in ASCII art
-    max_line_length = max(len(line) for line in ascii_lines)  # Find the longest line
-    
-    # Adjust the text position to be closer to the bottom right (exact alignment)
-    text_position = max_line_length - len(text_to_add)  # Position text at the exact right
-    
-    # Print the text with no extra spaces and apply white color
-    print(WHITE + " " * text_position + text_to_add + Style.RESET_ALL)
+    for i, char in enumerate(banner):
+        print(colors[i % len(colors)] + char, end="")
+        time.sleep(0.007)
+    print(Fore.LIGHTYELLOW_EX + "\nPlease wait...\n")
+    time.sleep(2)
+    os.system("clear" if os.name == "posix" else "cls")
+    for i, char in enumerate(banner):
+        print(colors[i % len(colors)] + char, end="")
+    print(Fore.LIGHTYELLOW_EX + "\n")
 
 CONTRACT_SOURCE_CODE = '''
 pragma solidity ^0.8.0;
@@ -82,7 +59,7 @@ contract SimpleStorage {
 def countdown_timer(seconds):
     while seconds:
         time_display = str(timedelta(seconds=seconds))
-        print(f"Restarting in: {time_display}", end="\r")
+        print(f"{Fore.CYAN}Restarting in: {time_display}", end="\r")
         time.sleep(1)
         seconds -= 1
     print("\nStarting new cycle...")
@@ -92,10 +69,10 @@ def send_eth(account, amount):
 
     balance_wei = web3.eth.get_balance(account.address)
     balance_eth = web3.from_wei(balance_wei, 'ether')
-    print(f"Balance of {account.address}: {balance_eth} {REDDIO_COIN_NAME}")
+    print(f"{Fore.GREEN}Balance of {account.address}: {balance_eth} {REDDIO_COIN_NAME}")
 
     nonce = web3.eth.get_transaction_count(account.address)
-    print(f"nonce of {account.address}: {nonce}")
+    print(f"{Fore.GREEN}Nonce of {account.address}: {nonce}")
 
     tx = {
         'nonce': nonce,
@@ -105,25 +82,29 @@ def send_eth(account, amount):
         'gasPrice': web3.to_wei(2.5, 'gwei')
     }
 
-    signed_tx = web3.eth.account.sign_transaction(tx, private_key)
+    signed_tx = web3.eth.account.sign_transaction(tx, account.key)
     tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
 
     tx_hash_link = f"https://reddio-devnet.l2scan.co/tx/{web3.to_hex(tx_hash)}"
-    print(f"Transaction hash: {tx_hash_link}")
+    print(f"{Fore.BLUE}Transaction hash: {tx_hash_link}")
 
     time.sleep(3)
 
     receipt = retry(lambda: web3.eth.wait_for_transaction_receipt(tx_hash, timeout=120), max_retries=5, wait_time=2)
 
     txStatus = "Success" if receipt.status == 1 else "Failed"
-    print(f"Transaction hash: {receipt.transactionHash.hex()} ({txStatus})")
+    print(f"{Fore.BLUE}Transaction hash: {receipt.transactionHash.hex()} ({txStatus})")
 
 def bridge_eth(account, amount_eth):
     web3 = connect_to_web3(SEPOLIA_RPC_URL)
 
     balance_wei = web3.eth.get_balance(account.address)
     balance_eth = web3.from_wei(balance_wei, 'ether')
-    print(f"Balance of {account.address}: {balance_eth} ETH")
+    print(f"{Fore.MAGENTA}Balance of {account.address}: {balance_eth} ETH")
+
+    if balance_eth < amount_eth:
+        print(f"{Fore.RED}Insufficient funds for bridging. Skipping account {account.address}.")
+        return
 
     nonce = web3.eth.get_transaction_count(account.address)
 
@@ -147,18 +128,19 @@ def bridge_eth(account, amount_eth):
         'value': amount_in_wei,
     })
 
-    signed_tx = web3.eth.account.sign_transaction(tx, private_key)
-    tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
+    signed_tx = web3.eth.account.sign_transaction(tx, account.key)
+    try:
+        tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        tx_hash_link = f"https://sepolia.etherscan.io/tx/{web3.to_hex(tx_hash)}"
+        print(f"{Fore.BLUE}Transaction hash: {tx_hash_link}")
 
-    tx_hash_link = f"https://sepolia.etherscan.io/tx/{web3.to_hex(tx_hash)}"
-    print(f"Transaction hash: {tx_hash_link}")
+        receipt = retry(lambda: web3.eth.wait_for_transaction_receipt(tx_hash, timeout=120), max_retries=5, wait_time=2)
 
-    receipt = retry(lambda: web3.eth.wait_for_transaction_receipt(tx_hash, timeout=120), max_retries=5, wait_time=2)
+        txStatus = "Success" if receipt.status == 1 else "Failed"
+        print(f"{Fore.BLUE}Transaction hash: {receipt.transactionHash.hex()} ({txStatus})")
+    except Exception as e:
+        print(f"{Fore.RED}Failed to bridge ETH for account {account.address}: {str(e)}")
 
-    txStatus = "Success" if receipt.status == 1 else "Failed"
-    print(f"Transaction hash: {receipt.transactionHash.hex()} ({txStatus})")
-
-# Fungsi untuk menghasilkan nama token acak dengan menggabungkan kata sifat dan kata benda
 def generate_creative_token():
     adjectives = [
         "Quantum", "Stellar", "Lunar", "Solar", "Crypto", "Nebula", "Galaxy", "Ether", "Cosmic", "Radiant", 
@@ -181,7 +163,6 @@ def generate_creative_token():
     
     return contract_name, name, symbol
 
-# Fungsi untuk menghasilkan simbol token berdasarkan nama token
 def generate_symbol(name):
     words = name.split()
     symbol = ''.join([word[0] for word in words]).upper()
@@ -191,11 +172,9 @@ def generate_symbol(name):
     
     return symbol
 
-# Fungsi untuk menghasilkan initial supply acak (antara 1 juta sampai 1 miliar)
 def generate_initial_supply():
     return random.randint(1000000, 1000000000)
 
-# Perbarui fungsi deploy_contract agar nama, simbol, dan supply acak digunakan
 def deploy_contract(account):
     web3 = connect_to_web3(REDDIO_RPC_URL)
     try:
@@ -285,7 +264,7 @@ def deploy_contract(account):
         TokenContract = web3.eth.contract(abi=abi, bytecode=bytecode)
 
         gas_estimate = TokenContract.constructor(initial_supply).estimate_gas({'from': account.address})
-        print(f"Gas estimate for {token_name} ({symbol}) deployment: {gas_estimate}")
+        print(f"{Fore.YELLOW}Gas estimate for {token_name} ({symbol}) deployment: {gas_estimate}")
 
         transaction = TokenContract.constructor(initial_supply).build_transaction({
             'from': account.address,
@@ -298,17 +277,17 @@ def deploy_contract(account):
 
         tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
         tx_hash_link = f"https://reddio-devnet.l2scan.co/tx/{web3.to_hex(tx_hash)}"
-        print(f"Deployment transaction for {token_name} sent. Hash: {tx_hash_link}")
+        print(f"{Fore.BLUE}Deployment transaction for {token_name} sent. Hash: {tx_hash_link}")
 
         receipt = retry(lambda: web3.eth.wait_for_transaction_receipt(tx_hash, timeout=120), max_retries=5, wait_time=2)
-        print(f"{token_name} contract deployed at: {receipt.contractAddress}")
+        print(f"{Fore.GREEN}{token_name} contract deployed at: {receipt.contractAddress}")
     except Exception as e:
-        print(f"Failed to deploy contract: {str(e)}")
+        print(f"{Fore.RED}Failed to deploy contract: {str(e)}")
 
 if __name__ == "__main__":
-    print_red_white_ascii_art()
+    rainbow_banner()
 
-    deploy_choice = input("Apakah Anda ingin menjalankan deploy token? (y/n): ").strip().lower()
+    deploy_choice = input(f"{Fore.CYAN}Do you want to deploy a token? (y/n): ").strip().lower()
     deploy_contract_flag = deploy_choice == 'y'
 
     web3 = connect_to_web3(REDDIO_RPC_URL)
@@ -320,21 +299,21 @@ if __name__ == "__main__":
     
     while True:
         for i, private_key in enumerate(private_keys):
-            print(f"================================================================================\n")
+            print(f"{Fore.CYAN}================================================================================\n")
             account = get_account(web3, private_key)
             send_amount = random_between(0.0001, 0.001)
             wallet_link = f"https://reddio-devnet.l2scan.co/address/{account.address}"
-            print(f"Sending {send_amount} RED to {wallet_link}")
+            print(f"{Fore.CYAN}Sending {send_amount} RED to {wallet_link}")
             send_eth(account, send_amount)
             bridge_amount = random_between(0.0001, 0.0009)
-            print(f"Bridging {bridge_amount} ETH from Sepolia to Reddio ({wallet_link})")
+            print(f"{Fore.CYAN}Bridging {bridge_amount} ETH from Sepolia to Reddio ({wallet_link})")
             bridge_eth(account, bridge_amount)
 
             if deploy_contract_flag:
-                print(f"Deploying contract for {wallet_link}")
+                print(f"{Fore.CYAN}Deploying contract for {wallet_link}")
                 deploy_contract(account)
 
-            print(f"================================================================================\n")
+            print(f"{Fore.CYAN}================================================================================\n")
 
         delay_seconds = random_between(86400, 86777)
         countdown_timer(int(delay_seconds))
