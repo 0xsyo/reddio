@@ -3,3 +3,4 @@ eth-abi
 parsimonious
 aiohttp
 requests
+colorama
