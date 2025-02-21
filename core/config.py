@@ -6,7 +6,7 @@ REDDIO_CHAIN_ID=50341
 REDDIO_COIN_NAME="RED"
 
 # Sepolia
-SEPOLIA_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/GaU_MjT6W_adge_Ms4Gz0L-u6XqRQBGE"
+SEPOLIA_RPC_URL="https://ethereum-sepolia-rpc.publicnode.com"
 SEPOLIA_CHAIN_ID=11155111
 SEPOLIA_COIN_NAME="ETH"
 
