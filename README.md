@@ -75,7 +75,7 @@ Script Python ini mengotomatisasi tugas-tugas untuk Reddio, termasuk bridging Et
 ### Cara Menggunakan
 1. Clone repository dan buka direktori:
    ```bash
-   git clone git clone https://github.com/0xsyo/reddio.git
+   git clone https://github.com/0xsyo/reddio.git
    cd reddio
    ```
 
