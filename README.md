@@ -17,7 +17,10 @@ This Python script automates tasks for Reddio, including Ethereum bridging, depl
   - `web3`
   - `solcx`
   - `colorama`
-  - `datetime`
+  - `eth-abi`
+  - `requests`
+  - `aiohttp`
+  - `parsimonious`
 
 ### How to Use
 1. Clone the repository and navigate to the directory:
