@@ -7,6 +7,7 @@ from core.config import (BRIDGE_CONTRACT_ABI, BRIDGE_CONTRACT_ADDRESS, REDDIO_RP
 from core.utils import connect_to_web3, get_account, random_between, retry
 from solcx import install_solc, set_solc_version, compile_source
 from colorama import Fore, Style, init
+import requests
 
 # Install Solidity Compiler
 install_solc('0.8.0')
@@ -14,6 +15,30 @@ set_solc_version('0.8.0')
 
 # Initialize colorama for terminal color support
 init(autoreset=True)
+
+# Konfigurasi untuk auto-claim tasks
+BASE_URL = "https://points-mainnet.reddio.com/v1"
+HEADERS = {
+    "accept": "application/json, text/plain, */*",
+    "accept-encoding": "gzip, deflate, br, zstd",
+    "accept-language": "id-ID,id;q=0.5",
+    "content-type": "application/json",
+    "origin": "https://points.reddio.com",
+    "priority": "u=1, i",
+    "referer": "https://points.reddio.com/",
+    "sec-ch-ua": '"Not(A:Brand";v="99", "Brave";v="133", "Chromium";v="133"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"Linux"',
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-site",
+    "sec-gpc": "1",
+    "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+}
+TASKS = {
+    "c2cf2c1d-cb46-406d-b025-dd6a00369215": "Complete one Testnet transfer on your wallet",
+    "c2cf2c1d-cb46-406d-b025-dd6a00369216": "Execute one Bridge transaction"
+}
 
 def rainbow_banner():
     os.system("clear" if os.name == "posix" else "cls")
@@ -36,30 +61,10 @@ def rainbow_banner():
         print(colors[i % len(colors)] + char, end="")
     print(Fore.LIGHTYELLOW_EX + "\n")
 
-CONTRACT_SOURCE_CODE = '''
-pragma solidity ^0.8.0;
-
-contract SimpleStorage {
-    uint256 storedData;
-
-    constructor() {
-        storedData = 100;
-    }
-
-    function set(uint256 x) public {
-        storedData = x;
-    }
-
-    function get() public view returns (uint256) {
-        return storedData;
-    }
-}
-'''
-
 def countdown_timer(seconds):
     while seconds:
         time_display = str(timedelta(seconds=seconds))
-        print(f"{Fore.CYAN}Restarting in: {time_display}", end="\r")
+        print(f"✅ {Fore.CYAN}Restarting in: {time_display}", end="\r")
         time.sleep(1)
         seconds -= 1
     print("\nStarting new cycle...")
@@ -69,10 +74,10 @@ def send_eth(account, amount):
 
     balance_wei = web3.eth.get_balance(account.address)
     balance_eth = web3.from_wei(balance_wei, 'ether')
-    print(f"{Fore.GREEN}Balance of {account.address}: {balance_eth} {REDDIO_COIN_NAME}")
+    print(f"✅ {Fore.GREEN}Balance of {account.address}: {balance_eth} {REDDIO_COIN_NAME}")
 
     nonce = web3.eth.get_transaction_count(account.address)
-    print(f"{Fore.GREEN}Nonce of {account.address}: {nonce}")
+    print(f"✅ {Fore.GREEN}Nonce of {account.address}: {nonce}")
 
     tx = {
         'nonce': nonce,
@@ -86,21 +91,21 @@ def send_eth(account, amount):
     tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
 
     tx_hash_link = f"https://reddio-devnet.l2scan.co/tx/{web3.to_hex(tx_hash)}"
-    print(f"{Fore.BLUE}Transaction hash: {tx_hash_link}")
+    print(f"✅ {Fore.CYAN}Transaction hash: {tx_hash_link}")
 
     time.sleep(3)
 
     receipt = retry(lambda: web3.eth.wait_for_transaction_receipt(tx_hash, timeout=120), max_retries=5, wait_time=2)
 
     txStatus = "Success" if receipt.status == 1 else "Failed"
-    print(f"{Fore.BLUE}Transaction hash: {receipt.transactionHash.hex()} ({txStatus})")
+    print(f"✅ {Fore.CYAN}Transaction hash: {receipt.transactionHash.hex()} ({txStatus})")
 
 def bridge_eth(account, amount_eth):
     web3 = connect_to_web3(SEPOLIA_RPC_URL)
 
     balance_wei = web3.eth.get_balance(account.address)
     balance_eth = web3.from_wei(balance_wei, 'ether')
-    print(f"{Fore.MAGENTA}Balance of {account.address}: {balance_eth} ETH")
+    print(f"✅ {Fore.MAGENTA}Balance of {account.address}: {balance_eth} ETH")
 
     if balance_eth < amount_eth:
         print(f"{Fore.RED}Insufficient funds for bridging. Skipping account {account.address}.")
@@ -132,48 +137,14 @@ def bridge_eth(account, amount_eth):
     try:
         tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
         tx_hash_link = f"https://sepolia.etherscan.io/tx/{web3.to_hex(tx_hash)}"
-        print(f"{Fore.BLUE}Transaction hash: {tx_hash_link}")
+        print(f"✅ {Fore.CYAN}Transaction hash: {tx_hash_link}")
 
         receipt = retry(lambda: web3.eth.wait_for_transaction_receipt(tx_hash, timeout=120), max_retries=5, wait_time=2)
 
         txStatus = "Success" if receipt.status == 1 else "Failed"
-        print(f"{Fore.BLUE}Transaction hash: {receipt.transactionHash.hex()} ({txStatus})")
+        print(f"✅ {Fore.CYAN}Transaction hash: {receipt.transactionHash.hex()} ({txStatus})")
     except Exception as e:
-        print(f"{Fore.RED}Failed to bridge ETH for account {account.address}: {str(e)}")
-
-def generate_creative_token():
-    adjectives = [
-        "Quantum", "Stellar", "Lunar", "Solar", "Crypto", "Nebula", "Galaxy", "Ether", "Cosmic", "Radiant", 
-        "Celestial", "Ethereal", "Digital", "Futuristic", "Ancient", "Nova", "Atomic", "Eclipse", "Infinite", "Vortex"
-    ]
-    
-    nouns = [
-        "Chain", "Element", "Coin", "Token", "Crystal", "Verse", "Galaxy", "Universe", "Sphere", "Orbit", 
-        "Network", "Link", "Foundation", "Block", "Core", "Matrix", "Circuit", "Realm", "Force", "Core", "System"
-    ]
-    
-    adjective = random.choice(adjectives)
-    noun = random.choice(nouns)
-    
-    name = f"{adjective} {noun}"
-    
-    contract_name = name.replace(" ", "_")
-
-    symbol = generate_symbol(name)
-    
-    return contract_name, name, symbol
-
-def generate_symbol(name):
-    words = name.split()
-    symbol = ''.join([word[0] for word in words]).upper()
-    
-    for word in words:
-        symbol += random.choice(word[1:3]).upper()   
-    
-    return symbol
-
-def generate_initial_supply():
-    return random.randint(1000000, 1000000000)
+        print(f"❌ {Fore.RED}Failed to bridge ETH for account {account.address}: {str(e)}")
 
 def deploy_contract(account):
     web3 = connect_to_web3(REDDIO_RPC_URL)
@@ -264,7 +235,7 @@ def deploy_contract(account):
         TokenContract = web3.eth.contract(abi=abi, bytecode=bytecode)
 
         gas_estimate = TokenContract.constructor(initial_supply).estimate_gas({'from': account.address})
-        print(f"{Fore.YELLOW}Gas estimate for {token_name} ({symbol}) deployment: {gas_estimate}")
+        print(f"✅ {Fore.YELLOW}Gas estimate for {token_name} ({symbol}) deployment: {gas_estimate}")
 
         transaction = TokenContract.constructor(initial_supply).build_transaction({
             'from': account.address,
@@ -277,17 +248,102 @@ def deploy_contract(account):
 
         tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
         tx_hash_link = f"https://reddio-devnet.l2scan.co/tx/{web3.to_hex(tx_hash)}"
-        print(f"{Fore.BLUE}Deployment transaction for {token_name} sent. Hash: {tx_hash_link}")
+        print(f"✅ {Fore.CYAN}Deployment transaction for {token_name} sent. Hash: {tx_hash_link}")
 
         receipt = retry(lambda: web3.eth.wait_for_transaction_receipt(tx_hash, timeout=120), max_retries=5, wait_time=2)
-        print(f"{Fore.GREEN}{token_name} contract deployed at: {receipt.contractAddress}")
+        print(f"✅ {Fore.GREEN}{token_name} contract deployed at: {receipt.contractAddress}")
     except Exception as e:
-        print(f"{Fore.RED}Failed to deploy contract: {str(e)}")
+        print(f"❌ {Fore.RED}Failed to deploy contract: {str(e)}")
+
+def generate_creative_token():
+    adjectives = [
+        "Quantum", "Stellar", "Lunar", "Solar", "Crypto", "Nebula", "Galaxy", "Ether", "Cosmic", "Radiant", 
+        "Celestial", "Ethereal", "Digital", "Futuristic", "Ancient", "Nova", "Atomic", "Eclipse", "Infinite", "Vortex"
+    ]
+    
+    nouns = [
+        "Chain", "Element", "Coin", "Token", "Crystal", "Verse", "Galaxy", "Universe", "Sphere", "Orbit", 
+        "Network", "Link", "Foundation", "Block", "Core", "Matrix", "Circuit", "Realm", "Force", "Core", "System"
+    ]
+    
+    adjective = random.choice(adjectives)
+    noun = random.choice(nouns)
+    
+    name = f"{adjective} {noun}"
+    
+    contract_name = name.replace(" ", "_")
+
+    symbol = generate_symbol(name)
+    
+    return contract_name, name, symbol
+
+def generate_symbol(name):
+    words = name.split()
+    symbol = ''.join([word[0] for word in words]).upper()
+    
+    for word in words:
+        symbol += random.choice(word[1:3]).upper()   
+    
+    return symbol
+
+def generate_initial_supply():
+    return random.randint(1000000, 1000000000)
+
+def fetch_account_info(wallet_address):
+    url = f"{BASE_URL}/userinfo?wallet_address={wallet_address}"
+    
+    try:
+        response = requests.get(url, headers=HEADERS)
+        response.raise_for_status()
+        data = response.json().get("data", {})
+        print(Fore.GREEN + f"✅ Informasi akun {wallet_address}:" + Style.RESET_ALL)
+        print(f"✅ Points: {data.get('points', 'N/A')}")
+        print(f"✅ Task Points: {data.get('task_points', 'N/A')}")
+        print(f"✅ Discord Username: {data.get('discord_username', 'N/A')}")
+        print(f"✅ Twitter Handle: {data.get('twitter_handle', 'N/A')}")
+        print(f"✅ Devnet Daily Bridged: {data.get('devnet_daily_bridged', 'N/A')}")
+        print(f"✅ Devnet Daily Transferred: {data.get('devnet_daily_transferred', 'N/A')}")
+        return data
+    except requests.exceptions.RequestException as e:
+        print(Fore.RED + f"❌ Gagal mengambil informasi akun {wallet_address}: " + Style.RESET_ALL)
+        print(response.text)
+        return None
+
+def verify_task(wallet_address, task_id, task_name):
+    url = f"{BASE_URL}/points/verify"
+    payload = {"wallet_address": wallet_address, "task_uuid": task_id}
+    
+    try:
+        print(Fore.YELLOW + f"🔄 Memverifikasi task: {task_name}..." + Style.RESET_ALL)
+        response = requests.post(url, json=payload, headers=HEADERS)
+        response.raise_for_status()
+        print(Fore.GREEN + f"✅ Task {task_name} berhasil diverifikasi untuk {wallet_address}" + Style.RESET_ALL)
+        return True
+    except requests.exceptions.RequestException as e:
+        if "Already verified today" in response.text:
+            print(Fore.YELLOW + f"ℹ️ Task {task_name} sudah diverifikasi hari ini." + Style.RESET_ALL)
+            return True
+        else:
+            print(Fore.RED + f"❌ Gagal verifikasi task {task_name} untuk {wallet_address}: " + Style.RESET_ALL)
+            print(response.text)
+            return False
+
+def auto_claim_tasks(wallet_address):
+    account_info = fetch_account_info(wallet_address)
+    if not account_info:
+        return
+
+    for task_id, task_name in TASKS.items():
+        print(Fore.CYAN + f"🔄 Memproses task: {task_name}..." + Style.RESET_ALL)
+        if verify_task(wallet_address, task_id, task_name):
+            print(Fore.GREEN + f"✅ Task {task_name} berhasil diselesaikan!" + Style.RESET_ALL)
+        else:
+            print(Fore.RED + f"⚠️ Gagal memproses task {task_name}." + Style.RESET_ALL)
 
 if __name__ == "__main__":
     rainbow_banner()
 
-    deploy_choice = input(f"{Fore.CYAN}Do you want to deploy a token? (y/n): ").strip().lower()
+    deploy_choice = input(f"✅ {Fore.CYAN}Do you want to deploy a token? (y/n): ").strip().lower()
     deploy_contract_flag = deploy_choice == 'y'
 
     web3 = connect_to_web3(REDDIO_RPC_URL)
@@ -299,21 +355,24 @@ if __name__ == "__main__":
     
     while True:
         for i, private_key in enumerate(private_keys):
-            print(f"{Fore.CYAN}================================================================================\n")
             account = get_account(web3, private_key)
             send_amount = random_between(0.0001, 0.001)
             wallet_link = f"https://reddio-devnet.l2scan.co/address/{account.address}"
-            print(f"{Fore.CYAN}Sending {send_amount} RED to {wallet_link}")
+            print(f"✅ {Fore.CYAN}Sending {send_amount} RED to {wallet_link}")
             send_eth(account, send_amount)
             bridge_amount = random_between(0.0001, 0.0009)
-            print(f"{Fore.CYAN}Bridging {bridge_amount} ETH from Sepolia to Reddio ({wallet_link})")
+            print(f"✅ {Fore.CYAN}Bridging {bridge_amount} ETH from Sepolia to Reddio ({wallet_link})")
             bridge_eth(account, bridge_amount)
 
             if deploy_contract_flag:
-                print(f"{Fore.CYAN}Deploying contract for {wallet_link}")
+                print(f"✅ {Fore.CYAN}Deploying contract for {wallet_link}")
                 deploy_contract(account)
 
-            print(f"{Fore.CYAN}================================================================================\n")
+            # Jalankan auto-claim tasks setelah semua proses selesai
+            print(f"✅ {Fore.CYAN}Starting auto-claim tasks for {wallet_link}")
+            auto_claim_tasks(account.address)
+
+            print(f"✅ {Fore.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
         delay_seconds = random_between(86400, 86777)
         countdown_timer(int(delay_seconds))
