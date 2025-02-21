@@ -5,11 +5,15 @@
 
 This Python script automates tasks for Reddio, including Ethereum bridging, deploying ERC-20 contracts, and handling random token generation. It supports automated retries, gas estimation, and creative token names.
 
-### Features
-- Automates ETH bridging to Reddio.
-- Generates unique token names and deploys ERC-20 contracts.
-- Randomized operations for enhanced security.
-- Customizable retry mechanisms for reliable transactions.
+### Features  
+- Displays account balance and nonce before transactions  
+- Logs auto-claim points after completing transactions  
+- Automates Claim Points  
+- Automates ETH bridging to Reddio  
+- Generates unique token names and deploys ERC-20 contracts  
+- Randomized operations for enhanced security  
+- Customizable retry mechanisms for reliable transactions  
+- Improved readability of transaction logs  
 
 ### Prerequisites
 - Python 3.x
