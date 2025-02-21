@@ -258,12 +258,18 @@ def deploy_contract(account):
 def generate_creative_token():
     adjectives = [
         "Quantum", "Stellar", "Lunar", "Solar", "Crypto", "Nebula", "Galaxy", "Ether", "Cosmic", "Radiant", 
-        "Celestial", "Ethereal", "Digital", "Futuristic", "Ancient", "Nova", "Atomic", "Eclipse", "Infinite", "Vortex"
+        "Celestial", "Ethereal", "Digital", "Futuristic", "Ancient", "Nova", "Atomic", "Eclipse", "Infinite", "Vortex",
+        "Decentralized", "Immutable", "Transparent", "Trustless", "Encrypted", "Dynamic", "Lightning", "Hybrid", 
+        "Pioneering", "NextGen", "Scalable", "Adaptive", "Synthetic", "Metaverse", "Defi", "Programmable", 
+        "Autonomous", "Layered", "Hyper", "Spectral", "Interstellar"
     ]
     
     nouns = [
         "Chain", "Element", "Coin", "Token", "Crystal", "Verse", "Galaxy", "Universe", "Sphere", "Orbit", 
-        "Network", "Link", "Foundation", "Block", "Core", "Matrix", "Circuit", "Realm", "Force", "Core", "System"
+        "Network", "Link", "Foundation", "Block", "Core", "Matrix", "Circuit", "Realm", "Force", "Core", "System",
+        "Protocol", "Ledger", "Node", "Wallet", "Stake", "Mining", "Contract", "Layer", "Liquidity", "Consensus",
+        "Governance", "Bridge", "Oracle", "Ecosystem", "Hash", "Nonce", "Validator", "Beacon", "Cluster", 
+        "Sharding", "Dapp", "SmartContract", "Gateway"
     ]
     
     adjective = random.choice(adjectives)
@@ -305,7 +311,7 @@ def fetch_account_info(wallet_address):
         print(f"✅ Devnet Daily Transferred: {data.get('devnet_daily_transferred', 'N/A')}")
         return data
     except requests.exceptions.RequestException as e:
-        print(Fore.RED + f"❌ Gagal mengambil informasi akun {wallet_address}: " + Style.RESET_ALL)
+        print(Fore.RED + f"❌ Failed to retrieve account information {wallet_address}: " + Style.RESET_ALL)
         print(response.text)
         return None
 
@@ -314,17 +320,17 @@ def verify_task(wallet_address, task_id, task_name):
     payload = {"wallet_address": wallet_address, "task_uuid": task_id}
     
     try:
-        print(Fore.YELLOW + f"🔄 Memverifikasi task: {task_name}..." + Style.RESET_ALL)
+        print(Fore.YELLOW + f"🔄 Verifying task: {task_name}..." + Style.RESET_ALL)
         response = requests.post(url, json=payload, headers=HEADERS)
         response.raise_for_status()
-        print(Fore.GREEN + f"✅ Task {task_name} berhasil diverifikasi untuk {wallet_address}" + Style.RESET_ALL)
+        print(Fore.GREEN + f"✅ Task {task_name} successfully verified for {wallet_address}" + Style.RESET_ALL)
         return True
     except requests.exceptions.RequestException as e:
         if "Already verified today" in response.text:
-            print(Fore.YELLOW + f"ℹ️ Task {task_name} sudah diverifikasi hari ini." + Style.RESET_ALL)
+            print(Fore.YELLOW + f"ℹ️ Task {task_name} it was verified today." + Style.RESET_ALL)
             return True
         else:
-            print(Fore.RED + f"❌ Gagal verifikasi task {task_name} untuk {wallet_address}: " + Style.RESET_ALL)
+            print(Fore.RED + f"❌ Task verification failed {task_name} for {wallet_address}: " + Style.RESET_ALL)
             print(response.text)
             return False
 
@@ -336,9 +342,9 @@ def auto_claim_tasks(wallet_address):
     for task_id, task_name in TASKS.items():
         print(Fore.CYAN + f"🔄 Memproses task: {task_name}..." + Style.RESET_ALL)
         if verify_task(wallet_address, task_id, task_name):
-            print(Fore.GREEN + f"✅ Task {task_name} berhasil diselesaikan!" + Style.RESET_ALL)
+            print(Fore.GREEN + f"✅ Task {task_name} completed successfully!" + Style.RESET_ALL)
         else:
-            print(Fore.RED + f"⚠️ Gagal memproses task {task_name}." + Style.RESET_ALL)
+            print(Fore.RED + f"⚠️ Failed to process task {task_name}." + Style.RESET_ALL)
 
 if __name__ == "__main__":
     rainbow_banner()
@@ -372,7 +378,7 @@ if __name__ == "__main__":
             print(f"✅ {Fore.CYAN}Starting auto-claim tasks for {wallet_link}")
             auto_claim_tasks(account.address)
 
-            print(f"✅ {Fore.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+            print(f"{Fore.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
-        delay_seconds = random_between(86400, 86777)
+        delay_seconds = random_between(21600, 25200)
         countdown_timer(int(delay_seconds))
