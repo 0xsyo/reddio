@@ -51,11 +51,15 @@ This Python script automates tasks for Reddio, including Ethereum bridging, depl
 
 Script Python ini mengotomatisasi tugas-tugas untuk Reddio, termasuk bridging Ethereum, deploy kontrak ERC-20, dan pembuatan token acak. Script ini mendukung mekanisme retry otomatis, estimasi gas, dan nama token kreatif.
 
-### Fitur
-- Mengotomatisasi bridging ETH ke Reddio.
-- Menghasilkan nama token unik dan mendistribusikan kontrak ERC-20.
-- Operasi acak untuk keamanan tambahan.
-- Mekanisme retry yang dapat dikustomisasi untuk transaksi yang andal.
+### Fitur  
+- Menampilkan saldo akun dan nonce sebelum transaksi  
+- Mencatat poin auto-claim setelah menyelesaikan transaksi  
+- Mengotomatisasi klaim poin  
+- Mengotomatisasi bridging ETH ke Reddio  
+- Menghasilkan nama token unik dan mendistribusikan kontrak ERC-20  
+- Operasi acak untuk keamanan tambahan  
+- Mekanisme retry yang dapat dikustomisasi untuk transaksi yang andal  
+- Meningkatkan keterbacaan log transaksi  
 
 ### Prasyarat
 - Python 3.x
@@ -63,7 +67,10 @@ Script Python ini mengotomatisasi tugas-tugas untuk Reddio, termasuk bridging Et
   - `web3`
   - `solcx`
   - `colorama`
-  - `datetime`
+  - `eth-abi`
+  - `requests`
+  - `aiohttp`
+  - `parsimonious`
 
 ### Cara Menggunakan
 1. Clone repository dan buka direktori:
