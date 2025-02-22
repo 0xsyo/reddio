@@ -349,7 +349,7 @@ def auto_claim_tasks(wallet_address):
 if __name__ == "__main__":
     rainbow_banner()
 
-    deploy_choice = input(f"✅ {Fore.CYAN}Do you want to deploy a token? (y/n): ").strip().lower()
+    deploy_choice = input(f"🛠 {Fore.CYAN}Do you want to deploy a token? (y/n): ").strip().lower()
     deploy_contract_flag = deploy_choice == 'y'
 
     web3 = connect_to_web3(REDDIO_RPC_URL)
