@@ -340,7 +340,7 @@ def auto_claim_tasks(wallet_address):
         return
 
     for task_id, task_name in TASKS.items():
-        print(Fore.CYAN + f"🔄 Memproses task: {task_name}..." + Style.RESET_ALL)
+        print(Fore.CYAN + f"🔄 Processing tasks: {task_name}..." + Style.RESET_ALL)
         if verify_task(wallet_address, task_id, task_name):
             print(Fore.GREEN + f"✅ Task {task_name} completed successfully!" + Style.RESET_ALL)
         else:
